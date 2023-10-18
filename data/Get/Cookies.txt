@@ -1,0 +1,4 @@
+Purpose: Cookies are used to store data on the user's device, primarily for the purpose of recognizing the user or maintaining session state
+
+State Management: Cookies are often used to manage user sessions on a website. For example, when you log in to a website,
+a cookie is often created to keep you logged in until you log out or the cookie expires.
