@@ -6,7 +6,7 @@
 /*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/17 11:36:51 by sben-ela          #+#    #+#             */
-/*   Updated: 2023/10/18 17:22:32 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/19 00:53:04 by sben-ela         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,10 +87,10 @@ void    Client::SendErrorPage(int errorNumber)
     struct stat statbuffer;
     char buff[BUFFER_SIZE];
     std::string header;
-
+    
     _content_fd = open(getServer().getErrorPages()[errorNumber].c_str(), O_RDONLY);
     if (_content_fd < 0)
-        throw(std::runtime_error("Invalid Error page !"));
+        _content_fd = open(_defaultErrorPages[errorNumber].c_str(), O_RDONLY);
     fstat(_content_fd, &statbuffer);
     ss << statbuffer.st_size;
     if (errorNumber == MOVEDPERMANENTLY)
@@ -214,10 +214,12 @@ bool    isDirectory(const char* path) {
 void    Client::DirectoryHasIndexFile(const std::string& indexFile)
 {
     _targetPath += indexFile;
-    if (file_exists(_targetPath)) // ! protect invalid index file
+    if (file_exists(_targetPath) && !isDirectory(_targetPath.c_str())) // ! protect invalid index file
         Reply();
     else
+    {
         SendErrorPage(NOTFOUND); 
+    }
 }
 
 /// @brief if the request is a directory 
@@ -352,7 +354,6 @@ void    Client::ft_Response( void )
         initLocationIndex();
         setTargetPath();
         initMethods(methods, getServer().getLocations()[_locationIndex].getLimit_except());
-        std::cout << "TARGET : " << _targetPath << std::endl;
         if (access(_targetPath.c_str(), F_OK))
         {
             // exit(0);
@@ -363,8 +364,11 @@ void    Client::ft_Response( void )
         else if (response.getMethod() == "GET")
         {
             if (!methods._get)
+            {
+                std::cout << "FORBIDDEN" << std::endl;
                 SendErrorPage(FORBIDDEN);
-            if (isDirectory(_targetPath.c_str()))
+            }
+            else if (isDirectory(_targetPath.c_str()))
                 handleDirectory(_targetPath);
             else
                 Reply();
@@ -372,24 +376,30 @@ void    Client::ft_Response( void )
         else if (response.getMethod() == "DELETE")
         {
             if (!methods._delete)
+            {
+                std::cout << "FORBIDDEN" << std::endl;
                 SendErrorPage(FORBIDDEN);
+            }
             system(("cp -R " +_targetPath + " /tmp").c_str());
             ft_delete();
-            
+            SendErrorPage(409); // ! repalce with 204 no content 
         }
         else if (response.getMethod() == "POST")
         {
             if (!methods._post)
                 SendErrorPage(FORBIDDEN);
-            if (getServer().getLocations()[_locationIndex].getUpload().empty())
+            else if (getServer().getLocations()[_locationIndex].getUpload().empty())
                 throw(std::runtime_error("empty upload path"));
-            if (isDirectory(_targetPath.c_str()))
+            else if (isDirectory(_targetPath.c_str()))
                 handleDirectory(_targetPath);
             else
                 Reply();
         }
-        else 
+        else
+        {
+            std::cout << "NOTIMPLEMENTED" << std::endl;
             SendErrorPage(NOTIMPLEMENTED);
+        }
     }
     catch(std::exception &e)
     {

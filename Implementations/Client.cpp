@@ -6,7 +6,7 @@
 /*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/20 13:32:21 by aybiouss          #+#    #+#             */
-/*   Updated: 2023/10/17 18:37:45 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/18 22:25:57 by sben-ela         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ Client::Client(const Client& other)
         this->_client_server = other._client_server;
         _status = other._status;
         this->response = other.response;
+        _defaultErrorPages = other._defaultErrorPages;
     }
 }
 
@@ -51,6 +52,7 @@ Client& Client::operator=(const Client& other)
         _status = other._status;
         this->_client_server = other._client_server;
         this->response = other.response;
+        _defaultErrorPages = other._defaultErrorPages;
     }
     return *this;
 }
@@ -86,6 +88,24 @@ void    Client::fullMapEnv()
     {
         std::cout << it->first << "=" << it->second << std::endl;
     }
+}
+
+void    Client::initDefaultErrorPages( void )
+{
+    std::cout << "inti error pages" << std::endl;
+    _defaultErrorPages[MOVEDPERMANENTLY] = "Errors/301.html";
+    _defaultErrorPages[NOTALLOWED] = "Errors/405.html";
+    _defaultErrorPages[BADREQUEST] = "Errors/400.html";
+    _defaultErrorPages[UNAUTHORIZED] = "Errors/401.html";
+    _defaultErrorPages[FORBIDDEN] = "Errors/403.html";
+    _defaultErrorPages[NOTFOUND] = "Errors/404.html";
+    _defaultErrorPages[REQUESTTIMEOUT] = "Errors/408.html";
+    _defaultErrorPages[CONFLICT] = "Errors/409.html";
+    _defaultErrorPages[INTERNALSERVERERROR] = "Errors/500.html";
+    _defaultErrorPages[NOTIMPLEMENTED] = "Errors/501.html";
+    _defaultErrorPages[BADGATEWAY] = "Errors/502.html";
+    _defaultErrorPages[SERVICEUNAVAILABLE] = "Errors/503.html";
+    _defaultErrorPages[GATEWAYTIMEOUT] = "Errors/504.html";
 }
 
 void    Client::fullEnv()
