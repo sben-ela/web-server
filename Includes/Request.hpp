@@ -6,7 +6,7 @@
 /*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/04 17:07:10 by aybiouss          #+#    #+#             */
-/*   Updated: 2023/10/17 13:46:25 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/22 22:50:15 by sben-ela         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ class Request
         bool                  _chunked;
     public:
         std::string           _name;
+        std::string           _upload;
         Request();
         Request(const Request& other);
         Request& operator=(const Request& other);
@@ -62,7 +63,7 @@ class Request
         int                        processBody();
         size_t                     customFind(const std::vector<char>& vec, const std::string& str, size_t start);
         int                        parseHeaders();
-        std::string                GenerateFile();
+        std::string                GenerateFile(const std::string& UploadPath);
         std::string                getQueryString() const;
         const int&                 getFd() const;
         int                        countNumbersInString(const std::string& inputString);
@@ -71,7 +72,7 @@ class Request
         std::map<int, std::string> getStatusCode( void ) const;
         void                       CreateStatusCode( void );
         void                       processMultiPart(std::string content);
-        std::string                ft_temp( void ) const;
+        std::string                ft_temp( void ) const; // ! hadi makantx katakhed hta chi arg
         const std::map<std::string, std::string>& getHeaders( void ) const;
         ~Request();
 };

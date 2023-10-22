@@ -6,7 +6,7 @@
 /*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/05 09:27:53 by aybiouss          #+#    #+#             */
-/*   Updated: 2023/10/18 00:55:47 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/22 22:54:43 by sben-ela         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,6 +107,45 @@ int		Request::processChunk(std::string buffer)
     return 1;
 }
 
+// std::string GenerateRandomString(int length) {
+//     const char* Base = "ABCDEFJHIGKLMNOPQRSTUVWXYZabcdefh12326544";
+//     std::string randomString;
+//     for (int i = 0; i < length; i++) {
+//         randomString += Base[rand() % strlen(Base)];
+//     }
+//     return randomString;
+// }
+
+// std::string GenerateTimestamp() {
+//     time_t currentTime;
+//     struct tm* localTimeInfo;
+//     char timestamp[20];
+
+//     time(&currentTime);
+//     localTimeInfo = localtime(&currentTime);
+
+//     strftime(timestamp, sizeof(timestamp), "%Y%m%d%H%M%S", localTimeInfo);
+
+//     return timestamp;
+// }
+
+// std::string Request::GenerateFile() {
+//     std::string randomString = GenerateRandomString(6); // 6 characters for the filename
+//     std::string timestamp = GenerateTimestamp();
+
+//     const char* dir_path = _upload.append("/").c_str();
+
+//     if (mkdir(dir_path, 0777) != 0 && errno != EEXIST) {
+//         // std::cerr << "Failed to create directory: " << strerror(errno) << std::endl;
+//         return "";  // Return an empty string to indicate failure
+//     }
+
+//     std::string fileName = dir_path + timestamp + "_" + randomString;
+//     std::cout << randomString << " " << timestamp << std::endl;
+//     _ofile = fileName;
+//     return _ofile;
+// }
+
 std::string GenerateRandomString(int length) {
     const char* Base = "ABCDEFJHIGKLMNOPQRSTUVWXYZabcdefh12326544";
     std::string randomString;
@@ -129,11 +168,11 @@ std::string GenerateTimestamp() {
     return timestamp;
 }
 
-std::string Request::GenerateFile() {
+std::string Request::GenerateFile(const std::string& UploadPath) {
     std::string randomString = GenerateRandomString(6); // 6 characters for the filename
     std::string timestamp = GenerateTimestamp();
 
-    const char* dir_path = "/Users/sben-ela/Desktop/WebServe/data/Post/";
+    const char* dir_path = UploadPath.c_str();
 
     if (mkdir(dir_path, 0777) != 0 && errno != EEXIST) {
         std::cerr << "Failed to create directory: " << strerror(errno) << std::endl;
@@ -353,8 +392,8 @@ int    Request::parseHeaders()
     }
     else if (_method == "POST")
     {
-        std::string extension = ft_temp(); /// ! bdelha
-        _name = GenerateFile() + extension;
+        std::string extension = ft_temp(); /// ! bdelha // 
+        _name = GenerateFile("/Users/sben-ela/Desktop/_server/data/Post/") + extension;
         std::cout << "IN REQUEST : " << _name.c_str() << std::endl;
         _fd = open(_name.c_str(), O_RDWR | O_APPEND | O_CREAT, 0666);
         std::cout << "File created with number : " << _fd << std::endl;
@@ -488,18 +527,12 @@ std::string         Request::ft_temp( void ) const
     mimeTypeToExtensionMap["text/css"] = ".css";
     mimeTypeToExtensionMap["application/javascript"] = ".js";
     mimeTypeToExtensionMap["application/json"] = ".json";
-    mimeTypeToExtensionMap["application/xml"] = ".xml";
     mimeTypeToExtensionMap["image/jpeg"] = ".jpeg";
+    mimeTypeToExtensionMap["image/jpeg"] = ".jpg";
     mimeTypeToExtensionMap["image/png"] = ".png";
     mimeTypeToExtensionMap["image/gif"] = ".gif";
-    mimeTypeToExtensionMap["application/pdf"] = ".pdf";
-    mimeTypeToExtensionMap["audio/mpeg"] = ".mp3";
     mimeTypeToExtensionMap["video/mp4"] = ".mp4";
-    mimeTypeToExtensionMap["application/zip"] = ".zip";
-    mimeTypeToExtensionMap["application/x-tar"] = ".tar";
-    mimeTypeToExtensionMap["application/gzip"] = ".gz";
-    mimeTypeToExtensionMap["application/x-httpd-php"] = ".php";
-    mimeTypeToExtensionMap["text/x-python"] = ".py";
+    mimeTypeToExtensionMap["image/x-icon"] = ".ico";
     extention = mimeTypeToExtensionMap[_contentTypeValue];
     return (extention);
 }

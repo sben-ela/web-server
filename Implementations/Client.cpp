@@ -6,13 +6,13 @@
 /*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/20 13:32:21 by aybiouss          #+#    #+#             */
-/*   Updated: 2023/10/18 22:25:57 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/22 23:14:01 by sben-ela         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../Includes/Client.hpp"
 
-Client::Client() : _status(0){
+Client::Client() : _status(0) , _cgiPid(-1) {
     _isFavicon = false;
 }
 
@@ -40,6 +40,7 @@ Client::Client(const Client& other)
         _status = other._status;
         this->response = other.response;
         _defaultErrorPages = other._defaultErrorPages;
+        this->_cgiPid = other._cgiPid;
     }
 }
 
@@ -53,6 +54,7 @@ Client& Client::operator=(const Client& other)
         this->_client_server = other._client_server;
         this->response = other.response;
         _defaultErrorPages = other._defaultErrorPages;
+        this->_cgiPid = other._cgiPid;
     }
     return *this;
 }
@@ -84,10 +86,10 @@ void    Client::fullMapEnv()
             _mapEnv["HTTP_" + it->first] = it->second;
     }
     std::cout << "-------------------------------------------------------------------" << std::endl;
-    for (std::map<std::string, std::string>::const_iterator it = _mapEnv.begin(); it != _mapEnv.end(); it++)
-    {
-        std::cout << it->first << "=" << it->second << std::endl;
-    }
+    // for (std::map<std::string, std::string>::const_iterator it = _mapEnv.begin(); it != _mapEnv.end(); it++)
+    // {
+    //     std::cout << it->first << "=" << it->second << std::endl;
+    // }
 }
 
 void    Client::initDefaultErrorPages( void )
@@ -106,6 +108,29 @@ void    Client::initDefaultErrorPages( void )
     _defaultErrorPages[BADGATEWAY] = "Errors/502.html";
     _defaultErrorPages[SERVICEUNAVAILABLE] = "Errors/503.html";
     _defaultErrorPages[GATEWAYTIMEOUT] = "Errors/504.html";
+    _defaultErrorPages[NOCONTENT] = "Errors/204.html";
+}
+
+std::string Client::findKey(const std::string &key)
+{
+    size_t start;
+    size_t end;
+
+    std::cout << "CGI HEADER : " << _CgiHeader << std::endl;
+    start = _CgiHeader.find(key);
+    if (start == std::string::npos)
+    {
+        std::cout << "START : " <<  start << std::endl;
+        return ("");
+    }
+    end = _CgiHeader.find("\r\n", start);
+    return(_CgiHeader.substr(start, end - start));  
+}
+
+
+std::string Client::getCookie( void )
+{
+    return ("\r\n" + findKey("Set-Cookie"));
 }
 
 void    Client::fullEnv()
@@ -129,27 +154,32 @@ void    Client::deleteEnv()
     delete [] _env;
 }
 
-const char* Client::get_content_type( void )
+std::string Client::get_content_type( void )
 {
+    std::string key;
+    
+    key = findKey("Content-Type");
+    if (!key.empty())
+        return(key);
     const char *last_dot = strrchr(response.getPath().c_str(), '.');
     if (last_dot)
     {
-        if (strcmp(last_dot, ".css") == 0) return "text/css";
-        if (strcmp(last_dot, ".gif") == 0) return "image/gif";
-        if (strcmp(last_dot, ".htm") == 0) return "text/html";
-        if (strcmp(last_dot, ".html") == 0) return "text/html";
-        if (strcmp(last_dot, ".ico") == 0) return "image/x-icon";
-        if (strcmp(last_dot, ".jpeg") == 0) return "image/jpeg";
-        if (strcmp(last_dot, ".mp4") == 0) return "video/mp4";
-        if (strcmp(last_dot, ".jpg") == 0) return "image/jpeg";
-        if (strcmp(last_dot, ".js") == 0) return "application/javascript";
-        if (strcmp(last_dot, ".json") == 0) return "application/json";
-        if (strcmp(last_dot, ".png") == 0) return "image/png";
-        if (strcmp(last_dot, ".txt") == 0) return "text/plain";
-        if (strcmp(last_dot, ".py") == 0) return "text/html";
-        if (strcmp(last_dot, ".php") == 0) return "text/html";
+        if (strcmp(last_dot, ".css") == 0) return "Content-Type: text/css";
+        if (strcmp(last_dot, ".gif") == 0) return "Content-Type: image/gif";
+        if (strcmp(last_dot, ".html") == 0) return "Content-Type: text/html";
+        if (strcmp(last_dot, ".ico") == 0) return "Content-Type: image/x-icon";
+        if (strcmp(last_dot, ".jpeg") == 0) return "Content-Type: image/jpeg";
+        if (strcmp(last_dot, ".mp4") == 0) return "Content-Type: video/mp4";
+        if (strcmp(last_dot, ".jpg") == 0) return "Content-Type: image/jpeg";
+        if (strcmp(last_dot, ".js") == 0) return "Content-Type: application/javascript";
+        if (strcmp(last_dot, ".json") == 0) return "Content-Type: application/json";
+        if (strcmp(last_dot, ".png") == 0) return "Content-Type: image/png";
+        if (strcmp(last_dot, ".txt") == 0) return "Content-Type: text/plain";
     }
-    return ("text/plain");
+    return ("Content-Type: text/html");
 }
 
 Client::~Client() {}
+// X-Powered-By: PHP/8.0.2
+// Set-Cookie: user=test
+// Content-type: text/html; charset=UTF-8

@@ -1,5 +1,5 @@
 <?php
 
-setcookie("user", "test");
-echo "hello Sben-ela";
+setcookie("user", "sben-ela");
+echo "Cookie created ";
 ?>

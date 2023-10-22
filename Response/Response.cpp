@@ -6,7 +6,7 @@
 /*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/17 11:36:51 by sben-ela          #+#    #+#             */
-/*   Updated: 2023/10/19 00:53:04 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/22 23:25:05 by sben-ela         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ size_t Client::getLocationIndex( void )
     return(_locationIndex);
 }
 
-std::string GenerateDirectoryListing(const std::string& directoryPath) {
+std::string Client::GenerateDirectoryListing(const std::string& directoryPath) {
     std::string html;
     html += "<html><head><title>Directory Listing</title></head><body>";
     html += "<h1>Directory Listing</h1>";
@@ -62,7 +62,7 @@ std::string GenerateDirectoryListing(const std::string& directoryPath) {
                     strftime(dateModified, sizeof(dateModified), "%D, %r", localtime(&fileStat.st_mtime));
 
                     // Add row to the table
-                    html += "<tr><td><a href='" + std::string(entry->d_name) + "'>" + entry->d_name + "</a></td><td>" + fileSize + "</td><td>" + dateModified + "</td></tr>";
+                    html += "<tr><td><a href='" + std::string(response.getPath() + entry->d_name) + "'>" + entry->d_name + "</a></td><td>" + fileSize + "</td><td>" + dateModified + "</td></tr>";
                 }
             }
         }
@@ -87,7 +87,6 @@ void    Client::SendErrorPage(int errorNumber)
     struct stat statbuffer;
     char buff[BUFFER_SIZE];
     std::string header;
-    
     _content_fd = open(getServer().getErrorPages()[errorNumber].c_str(), O_RDONLY);
     if (_content_fd < 0)
         _content_fd = open(_defaultErrorPages[errorNumber].c_str(), O_RDONLY);
@@ -114,18 +113,12 @@ void    Client::ft_send( void )
 {
     char buff[BUFFER_SIZE];
     if (!isOpen(_content_fd))
-    {
-        std::cout << " the file fd is closed : " << _content_fd << std::endl;
         _readStatus = -1;
-    }
     if (!isOpen(GetSocketId()))
-    {
-        std::cout << " the socket fd is closed : " << GetSocketId() << std::endl;
         _readStatus = -1;
-    }
     if ((_readStatus = read(_content_fd, buff, BUFFER_SIZE)) >= 0)
     {
-        if (write(GetSocketId(), buff, _readStatus) < 0)
+        if (write(GetSocketId(), buff, _readStatus) <= 0)
             _readStatus = -1;
     }
 }
@@ -138,7 +131,15 @@ void    Client::SendHeader(int fd)
 
     fstat(fd, &statbuffer);
     ss << statbuffer.st_size - _CgiHeader.size();
-    header = response.getHttpVersion() + response.getStatusCode()[response.getResponseStatus()] + "\r\nContent-Type: " + get_content_type() + "\r\nContent-Length: " + ss.str() + "\r\n\r\n";
+    std::cout << "[" << get_content_type() << "]" << std::endl; // ! ila makanx l content Type valid Send BadGetway =====> khas dzadd
+    if (_status == CGI)
+    {
+        header = response.getHttpVersion() + response.getStatusCode()[response.getResponseStatus()] + "\r\n" + get_content_type() + "\r\nContent-Length: " + ss.str() + (getCookie() != "\r\n" ? getCookie() : "") + "\r\n\r\n";
+        std::cout << "header : " << header << std::endl;
+    }
+    else
+        header = response.getHttpVersion() + response.getStatusCode()[response.getResponseStatus()] + "\r\n" + get_content_type() + "\r\nContent-Length: " + ss.str() + "\r\n\r\n";
+    // exit(0);
     write(GetSocketId(), header.c_str(), header.size());
 }
 
@@ -155,23 +156,23 @@ void    Client::Reply( void )
 {
     if (response.GetFileExtention() == ".php" || response.GetFileExtention() == ".py")
     {
-        _CgiFile = response.GenerateFile() + "sben-ela";
         _cgiPid = fork();
         if (!_cgiPid)
         {
             fullEnv();
+            _CgiFile = response.GenerateFile((response.getMethod() == "POST" ? "/Users/sben-ela/Desktop/_server/data/Post/" : "/Users/sben-ela/goinfre/"));
             std::map<std::string, std::string> intrepreter = getServer().getCgi();
             std::string filePath  = _targetPath.c_str();
             char *Path[3] = {(char*)intrepreter[response.GetFileExtention()].c_str(), (char *)filePath.c_str(), NULL};
             _content_fd = open (_CgiFile.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
             if (_content_fd < 0)
                 throw(std::runtime_error("Open Failed in child to open : " + _CgiFile));
-            dup2(_content_fd, 1);
+            dup2(_content_fd, STDOUT_FILENO);
             ft_close(_content_fd);
+            ft_close(STDERR_FILENO);
             if (response.getMethod() == "POST")
             {
                 int bodyFd = response.getFd();
-                std::cerr << "**************************" << std::endl;
                 dup2(bodyFd, STDIN_FILENO);
                 ft_close(bodyFd);
             }
@@ -279,18 +280,24 @@ void    Client::readCgiHeader( int fd )
     _CgiHeader = buff;
     pos = _CgiHeader.find("\r\n\r\n");
     if (pos == std::string::npos)
-        throw (std::runtime_error("Bad Gateway"));
-    lseek(fd, -1 * (rd - (pos + 4)), SEEK_CUR);
-    _CgiHeader = _CgiHeader.substr(0, pos + 4);
+    {
+        lseek(fd, 0, SEEK_SET);
+        _CgiHeader.clear();
+    }
+    else
+    {
+        lseek(fd, -1 * (rd - (pos + 4)), SEEK_CUR);
+        _CgiHeader = _CgiHeader.substr(0, pos + 4);
+    }
 }
 
-void    Client::checkIndexFile(const std::string& indexFile, const std::string& targetPath)
-{
-    if (getExtention(indexFile) != ".php" && getExtention(indexFile) != ".py")
-        Delete_dir(targetPath);
-    else
-        DirectoryHasIndexFile(indexFile);
-}
+// void    Client::checkIndexFile(const std::string& indexFile, const std::string& targetPath)
+// {
+//     if (getExtention(indexFile) != ".php" && getExtention(indexFile) != ".py")
+//         Delete_dir(targetPath);
+//     else
+//         DirectoryHasIndexFile(indexFile);
+// }
 
 /// @brief delete directory
 void    Delete_dir(const std::string& folderPath)
@@ -323,12 +330,8 @@ void    Client::ft_delete( void )
     {
         if (_targetPath[_targetPath.size() - 1] != '/')
             SendErrorPage(CONFLICT);
-        else if(getServer().getLocations()[_locationIndex].getIndex().empty() && getServer().getIndex().empty())
+        else
             Delete_dir(_targetPath);
-        else if (!getServer().getLocations()[_locationIndex].getIndex().empty())
-            checkIndexFile(getServer().getLocations()[_locationIndex].getIndex(), _targetPath);
-        else if (!getServer().getIndex().empty())
-            checkIndexFile(getServer().getIndex(), _targetPath);
     }
     else
         std::remove(_targetPath.c_str());
@@ -353,21 +356,16 @@ void    Client::ft_Response( void )
         response.CreateStatusCode();
         initLocationIndex();
         setTargetPath();
+        std::cout << "_targetPath "  << _targetPath << std::endl;
         initMethods(methods, getServer().getLocations()[_locationIndex].getLimit_except());
         if (access(_targetPath.c_str(), F_OK))
-        {
-            // exit(0);
             SendErrorPage(NOTFOUND);
-        }
         else if (access(_targetPath.c_str(), R_OK))
             SendErrorPage(FORBIDDEN);
         else if (response.getMethod() == "GET")
         {
             if (!methods._get)
-            {
-                std::cout << "FORBIDDEN" << std::endl;
                 SendErrorPage(FORBIDDEN);
-            }
             else if (isDirectory(_targetPath.c_str()))
                 handleDirectory(_targetPath);
             else
@@ -376,13 +374,14 @@ void    Client::ft_Response( void )
         else if (response.getMethod() == "DELETE")
         {
             if (!methods._delete)
-            {
-                std::cout << "FORBIDDEN" << std::endl;
                 SendErrorPage(FORBIDDEN);
+            else
+            {
+                system(("cp -R " +_targetPath + " /tmp").c_str());
+                ft_delete();
+                if (_status != 1)
+                    SendErrorPage(NOCONTENT);
             }
-            system(("cp -R " +_targetPath + " /tmp").c_str());
-            ft_delete();
-            SendErrorPage(409); // ! repalce with 204 no content 
         }
         else if (response.getMethod() == "POST")
         {
@@ -406,6 +405,11 @@ void    Client::ft_Response( void )
         _readStatus = -1;
         std::cout << e.what() << std::endl;
     } 
+    catch(std::string &e)
+    {
+        _readStatus = -1;
+        std::cout << e << std::endl;
+    } 
     catch(const int e)
     {
         std::cout << " Catch int : " << e << std::endl;
@@ -422,7 +426,7 @@ bool isOpen(int fd)
     struct stat buff;
     if (fstat(fd, &buff) == -1)
     {
-        std::cout << "invalid Fd " << std::endl;
+        // std::cout << "invalid Fd " << std::endl;
         return (false);
     }
     return(true);
@@ -432,5 +436,6 @@ void ft_close(int fd)
 {
     if (fd == -1)
         return ;
+    // std::cout << "*****************************************************************" << "close : " << fd << std::endl;
     close (fd);
 }

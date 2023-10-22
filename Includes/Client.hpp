@@ -6,7 +6,7 @@
 /*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/20 13:32:08 by aybiouss          #+#    #+#             */
-/*   Updated: 2023/10/18 18:53:02 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/22 19:15:15 by sben-ela         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,10 @@ class Client
         Methods     methods;
         bool        _isFavicon;
         Response    response;
+        bool    _contentType;
+        int     _childExitStatus;
+        int     _waitStatus;
+        bool    _contentLenght;
         Client();
         Client(const Client& other);
         Client& operator=(const Client& other);
@@ -53,12 +57,13 @@ class Client
         const Configuration&      getServer() const;
         void    set_server(Configuration p);
         void    set_socket(int socket);
-        // ! NEW
+        std::string getCookie( void );
+        std::string GenerateDirectoryListing(const std::string& directoryPath);
         void    initDefaultErrorPages( void );
         void    readCgiHeader( int fd );
         void    SendHeader(int fd);
         const std::stringstream&    getFileSize(int fd);
-        const char* get_content_type( void );
+    std::string get_content_type( void );
         void    fullMapEnv();
         void    fullEnv();
         void    deleteEnv();
@@ -73,6 +78,7 @@ class Client
         void    Reply( void );
         void    ft_send( void );
         void    ft_Response( void );
+        std::string findKey(const std::string &key);
         // !
         ~Client();
 };

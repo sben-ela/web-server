@@ -6,7 +6,7 @@
 /*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/04 13:11:31 by aybiouss          #+#    #+#             */
-/*   Updated: 2023/10/19 00:29:27 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/22 23:23:05 by sben-ela         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -204,7 +204,7 @@ int Servers::AllServers()
         fd_set tmp_read = read_fds;
         fd_set tmp_write = write_fds;
         int readySockets = select(maxFd + 1, &tmp_read, &tmp_write, NULL, NULL); // !
-        std::cout << "__________under Select__________" << std::endl;
+        // std::cout << "__________under Select__________" << std::endl;
         if (readySockets < 0)
         {
             for (int fd = 0; fd <= maxFd; fd++)
@@ -244,6 +244,7 @@ int Servers::AllServers()
                 new_client.set_socket(clientSocketw);
                 new_client.set_server(it->second);
                 new_client.initDefaultErrorPages();
+                // new_client.getServeer().upload
                 _client.push_back(new_client);
                 if (clientSocketw > 0) { // !
                     std::cout << "add " << clientSocketw << " to the read_fds" << std::endl;
@@ -255,7 +256,7 @@ int Servers::AllServers()
                 // } 
             }
         }
-        const std::string FAVICON_PATH = "/favicon.ico";
+        const std::string FAVICON_PATH = "/favicon .ico";
         for (std::vector<Client>::iterator its = _client.begin(); its != _client.end(); its++)
         {
             if (FD_ISSET(its->GetSocketId(), &tmp_read))
@@ -290,10 +291,9 @@ int Servers::AllServers()
                 {
                     std::string buf(buffer, bytesRead);
                     std::cout << buf << std::endl;
-                    if (strstr(buffer, FAVICON_PATH.c_str()) == NULL)
-                    {
-                        its->_isFavicon = false;
-    
+                    // if (strstr(buffer, FAVICON_PATH.c_str()) == NULL)
+                    // {
+                    //     its->_isFavicon = false;
                         if (!its->response.parseHttpRequest(buf)) // la 9ra kolchi
                         {
                             FD_CLR(its->GetSocketId(), &read_fds);
@@ -301,14 +301,14 @@ int Servers::AllServers()
                             FD_SET(its->GetSocketId(), &write_fds);                            
                         }
 
-                    }
-                    else
-                    {
-                        its->_isFavicon = true;
-                        FD_CLR(its->GetSocketId(), &read_fds);
-                        std::cout << "add " << its->GetSocketId() << " to write_fds " << std::endl;
-                        FD_SET(its->GetSocketId(), &write_fds);
-                    }
+                    // }
+                    // else
+                    // {
+                    //     its->_isFavicon = true;
+                    //     FD_CLR(its->GetSocketId(), &read_fds);
+                    //     std::cout << "add " << its->GetSocketId() << " to write_fds " << std::endl;
+                    //     FD_SET(its->GetSocketId(), &write_fds);
+                    // }
                 }
             }
         }
@@ -317,59 +317,77 @@ int Servers::AllServers()
             if (FD_ISSET(its->GetSocketId(), &tmp_write))
             {
                 its->_readStatus = -2;
-                if (its->_isFavicon)
-                {
-                    std::stringstream ss;
-                    struct stat statbuffer;
-                    char buff[BUFFER_SIZE];
-                    std::string header;
+                // if (its->_isFavicon)
+                // {
+                //     std::stringstream ss;
+                //     struct stat statbuffer;
+                //     char buff[BUFFER_SIZE];
+                //     std::string header;
 
-                    its->_content_fd = open(its->getServer().getErrorPages()[NOTFOUND].c_str(), O_RDONLY);
-                    if (its->_content_fd < 0)
-                        its->_content_fd = open(its->_defaultErrorPages[NOTFOUND].c_str(), O_RDONLY);
-                    std::cout << " ERROR PAGE : " << its->_defaultErrorPages[NOTFOUND] << std::endl;
-                    fstat(its->_content_fd, &statbuffer);
-                    ss << statbuffer.st_size;
-                    header = std::string("HTTP/1.1") + " 404 Not Found" + "\r\nContent-Length: " + ss.str() + "\r\n\r\n";
-                    write(its->GetSocketId(), header.c_str(), header.size());
-                    its->_status = 1;
-                    its->_isFavicon = false;
-                    std::cout << " IS FAVICON : " << its->response.getHttpVersion() << std::endl;
-                }
-                else if (its->_status == 0)
+                //     its->_content_fd = open(its->getServer().getErrorPages()[NOTFOUND].c_str(), O_RDONLY);
+                //     if (its->_content_fd < 0)
+                //         its->_content_fd = open(its->_defaultErrorPages[NOTFOUND].c_str(), O_RDONLY);
+                //     std::cout << " ERROR PAGE : " << its->_defaultErrorPages[NOTFOUND] << std::endl;
+                //     fstat(its->_content_fd, &statbuffer);
+                //     ss << statbuffer.st_size;
+                //     header = std::string("HTTP/1.1") + " 404 Not Found" + "\r\nContent-Length: " + ss.str() + "\r\n\r\n";
+                //     write(its->GetSocketId(), header.c_str(), header.size());
+                //     its->_status = 1;
+                //     its->_isFavicon = false;
+                //     std::cout << " IS FAVICON : " << its->response.getHttpVersion() << std::endl;
+                // }
+                if (its->_status == 0)
                     its->ft_Response();
-                else if (its->_status != CGI)
-                    its->ft_send();
-                else
+                else if (its->_status == 1)
                 {
-                    int r = waitpid(its->_cgiPid, 0, WNOHANG);
-                    if (r == -1)
+                    its->ft_send();
+                }
+                else if (its->_status == CGI)
+                {
+                    its->_waitStatus = waitpid(its->_cgiPid, &its->_childExitStatus, WNOHANG);
+                    if (its->_waitStatus > 0)
                     {
-                        its->_content_fd = open (its->_CgiFile.c_str(), O_RDONLY);
-                        if (its->_content_fd < 0)
-                            throw(std::runtime_error("Open Failed to open : " + its->_CgiFile ));
-                        its->_CgiHeader.clear();
-                        if (its->response.GetFileExtention() == ".php")
-                            its->readCgiHeader(its->_content_fd);
-                        std::cout << its->_CgiHeader << std::endl;
-                        its->SendHeader(its->_content_fd);
-                        its->_status = 1;
+                        if (WIFEXITED(its->_childExitStatus) && WEXITSTATUS(its->_childExitStatus))
+                            its->SendErrorPage(INTERNALSERVERERROR);
+                        else if (WIFSIGNALED(its->_childExitStatus))
+                            its->SendErrorPage(INTERNALSERVERERROR);
+                        else if (its->_waitStatus == its->_cgiPid)
+                        {
+                            its->_content_fd = open (its->_CgiFile.c_str(), O_RDONLY);
+                            if (its->_content_fd < 0)
+                                its->SendErrorPage(INTERNALSERVERERROR);
+                            else{
+                                its->_CgiHeader.clear();
+                                its->readCgiHeader(its->_content_fd);
+                                its->SendHeader(its->_content_fd);
+                                its->_status = 1;
+                            }
+                        }
                     }
-                    else if(std::time(NULL) - its->_cgiTimer >= 5)
+                    else if(std::time(NULL) - its->_cgiTimer >= TIMEOUT)
                     {
-                        kill(its->_cgiPid , SIGKILL);
+                        kill(its->_cgiPid , SIGTERM);
+                        // waitpid(its->_cgiPid, 0, 0);
+                        its->_cgiPid = -1;
                         its->SendErrorPage(REQUESTTIMEOUT);
                     }
                 }
-                if (its->_readStatus == -1 || its->_readStatus == 0)
+                // std::cout << its->_readStatus << std::endl;
+                // std::cout << "_PID : " << its->_cgiPid << "r : " << r << std::endl;
+                if (its->_waitStatus == -1 || its->_readStatus == -1 || its->_readStatus == 0)
                 {
                     FD_CLR(its->GetSocketId(), &write_fds);
                     ft_close(its->GetSocketId());
                     ft_close(its->_content_fd);
-                    its->set_socket(-1);
-                    its->_content_fd = -1;
+                    // if (its->_status == CGI && its->_cgiPid != -1)
+                    // {
+                    //     kill(its->_cgiPid , SIGKILL);
+                    //     waitpid(its->_cgiPid, 0, 0);
+                    // }
                     its = _client.erase(its);
                 }
+                else 
+                    ++its;
             }
             else
                 ++its;

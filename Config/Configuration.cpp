@@ -6,7 +6,7 @@
 /*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/05 09:26:09 by aybiouss          #+#    #+#             */
-/*   Updated: 2023/09/29 14:01:37 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/20 15:52:34 by sben-ela         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -162,6 +162,22 @@ Configuration::Configuration(std::vector<std::string> vecteur)
         else
             begin++;
     }
+    std::vector<Location> sortedLocations = _locations;
+    int n = sortedLocations.size();
+    for (int i = 0; i < n - 1; ++i)
+    {
+        for (int j = 0; j < n - i - 1; ++j)
+        {
+            if (compareLocations(sortedLocations[j], sortedLocations[j + 1]))
+            {
+                Location tmp = sortedLocations[j];
+                sortedLocations[j] = sortedLocations[j + 1];
+                sortedLocations[j + 1] = tmp;
+            }
+        }
+    }
+    _locations.clear();
+    _locations = sortedLocations;
     // std::cout << "-----------------------" << std::endl;
     // std::cout << _locations[0] << std::endl;
     // if (getRoot().empty())
@@ -188,6 +204,11 @@ Configuration::Configuration(std::vector<std::string> vecteur)
     //     }
     // } // ! to be fixed !! 
 } //ila kant / katdir getcwd
+
+bool    Configuration::compareLocations(const Location& loc1, const Location& loc2)
+{
+    return loc1.getpattern().length() > loc2.getpattern().length();   
+}
 
 std::vector<int>    Configuration::getCodes() const
 {
@@ -244,7 +265,7 @@ Configuration::Configuration(const Configuration& other)
     : _root(other._root), _host(other._host), _index(other._index),
       _error_pages(other._error_pages), _codes(other._codes), _cgi(other._cgi), _client_max_body_size(other._client_max_body_size),
       _AutoIndex(other._AutoIndex), _root_exists(other._root_exists), _port(other._port),
-      _host_exists(other._host_exists), _port_exists(other._port_exists),
+      _host_exists(other._host_exists), _port_exists(other._port_exists), _upload(other._upload),
       _server_name(other._server_name), _locations(other._locations) {}
 
 Configuration& Configuration::operator=(const Configuration& other)
