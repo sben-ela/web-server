@@ -6,7 +6,7 @@
 /*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/04 13:11:31 by aybiouss          #+#    #+#             */
-/*   Updated: 2023/10/22 23:23:05 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/23 12:13:03 by sben-ela         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -348,17 +348,28 @@ int Servers::AllServers()
                     if (its->_waitStatus > 0)
                     {
                         if (WIFEXITED(its->_childExitStatus) && WEXITSTATUS(its->_childExitStatus))
+                        {
+                            std::cout << "********************" << std::endl;
                             its->SendErrorPage(INTERNALSERVERERROR);
+                        }
                         else if (WIFSIGNALED(its->_childExitStatus))
+                        {
+                            std::cout << "====================" << std::endl;
                             its->SendErrorPage(INTERNALSERVERERROR);
+                        }
                         else if (its->_waitStatus == its->_cgiPid)
                         {
+                            std::cout << "CGI FILE : " << its->_CgiFile << std::endl;
                             its->_content_fd = open (its->_CgiFile.c_str(), O_RDONLY);
                             if (its->_content_fd < 0)
+                            {
+                                std::cout << "+++++++++++++++++++" << std::endl;
                                 its->SendErrorPage(INTERNALSERVERERROR);
+                            }
                             else{
                                 its->_CgiHeader.clear();
                                 its->readCgiHeader(its->_content_fd);
+                                std::cout << its->_CgiHeader << std::endl;
                                 its->SendHeader(its->_content_fd);
                                 its->_status = 1;
                             }

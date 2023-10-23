@@ -6,7 +6,7 @@
 /*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/17 11:36:51 by sben-ela          #+#    #+#             */
-/*   Updated: 2023/10/22 23:25:05 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/23 13:14:57 by sben-ela         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -157,10 +157,11 @@ void    Client::Reply( void )
     if (response.GetFileExtention() == ".php" || response.GetFileExtention() == ".py")
     {
         _cgiPid = fork();
+        std::cout << "CGI FILE CHILD : "<< _CgiFile << std::endl;
+        _CgiFile = response.GenerateFile("/Users/sben-ela/goinfre/");
         if (!_cgiPid)
         {
             fullEnv();
-            _CgiFile = response.GenerateFile((response.getMethod() == "POST" ? "/Users/sben-ela/Desktop/_server/data/Post/" : "/Users/sben-ela/goinfre/"));
             std::map<std::string, std::string> intrepreter = getServer().getCgi();
             std::string filePath  = _targetPath.c_str();
             char *Path[3] = {(char*)intrepreter[response.GetFileExtention()].c_str(), (char *)filePath.c_str(), NULL};
