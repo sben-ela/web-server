@@ -1,8 +1,8 @@
+#!/usr/bin/php
 <?php
-
-// header("Content-Type: vid45454");
-
-// echo "hello world";
-system("wc -l")
-
+$stdin = fopen('php://stdin', 'r');
+while ($line = fgets($stdin)) {
+    echo $line;
+}
+fclose($stdin);
 ?>

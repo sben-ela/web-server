@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Response.cpp                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aybiouss <aybiouss@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/17 11:36:51 by sben-ela          #+#    #+#             */
-/*   Updated: 2023/10/23 13:14:57 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/23 17:45:48 by aybiouss         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,9 +131,11 @@ void    Client::SendHeader(int fd)
 
     fstat(fd, &statbuffer);
     ss << statbuffer.st_size - _CgiHeader.size();
-    std::cout << "[" << get_content_type() << "]" << std::endl; // ! ila makanx l content Type valid Send BadGetway =====> khas dzadd
+    // std::cout << "[" << get_content_type() << "]" << std::endl; // ! ila makanx l content Type valid Send BadGetway =====> khas dzadd
     if (_status == CGI)
     {
+        std::cout << "{{{{{{{{{{{{{{{{{{{{{{{{{ " << getCookie() << " }}}}}}}}}}}}}}}}}}}}}}}}}" << std::endl;
+        std::cout << " COOOKIEEEE : " << getCookie()  << ":" << std::endl;
         header = response.getHttpVersion() + response.getStatusCode()[response.getResponseStatus()] + "\r\n" + get_content_type() + "\r\nContent-Length: " + ss.str() + (getCookie() != "\r\n" ? getCookie() : "") + "\r\n\r\n";
         std::cout << "header : " << header << std::endl;
     }
@@ -156,15 +158,18 @@ void    Client::Reply( void )
 {
     if (response.GetFileExtention() == ".php" || response.GetFileExtention() == ".py")
     {
-        _cgiPid = fork();
-        std::cout << "CGI FILE CHILD : "<< _CgiFile << std::endl;
         _CgiFile = response.GenerateFile("/Users/sben-ela/goinfre/");
+        int fd = open ("names" , O_CREAT | O_RDWR | O_APPEND, 0666);
+        write(fd, _CgiFile.c_str(), _CgiFile.size());
+        write(fd, "\n", 1);
+        _status = CGI;
+        _cgiTimer = std::time(NULL);
+        _cgiPid = fork();
         if (!_cgiPid)
         {
             fullEnv();
             std::map<std::string, std::string> intrepreter = getServer().getCgi();
-            std::string filePath  = _targetPath.c_str();
-            char *Path[3] = {(char*)intrepreter[response.GetFileExtention()].c_str(), (char *)filePath.c_str(), NULL};
+            char *Path[3] = {(char*)intrepreter[response.GetFileExtention()].c_str(), (char *)_targetPath.c_str(), NULL};
             _content_fd = open (_CgiFile.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
             if (_content_fd < 0)
                 throw(std::runtime_error("Open Failed in child to open : " + _CgiFile));
@@ -177,13 +182,18 @@ void    Client::Reply( void )
                 dup2(bodyFd, STDIN_FILENO);
                 ft_close(bodyFd);
             }
+
+            // std::cerr << "======================================================" << std::endl;
+            // for (int i = 0; _env[i]; i++) {
+            //     std::cerr << " : =============== : " << _env[i] << std::endl;
+            // }
+            // std::cerr << "======================================================" << std::endl;
+
             execve(Path[0], Path, _env);
             deleteEnv();
             std::cout << "ERRRRORRR" << std::endl;
             exit(EXFIALE);
         }
-        _status = CGI;
-        _cgiTimer = std::time(NULL);
         return ;
     }
     else
@@ -193,7 +203,7 @@ void    Client::Reply( void )
             throw(std::runtime_error("Open Failed in GgI"));
     }
     SendHeader(_content_fd);
-    _status = 1;
+    _status = 1; 
 }
 
 bool    file_exists(const std::string &filename)

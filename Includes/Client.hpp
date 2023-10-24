@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Client.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aybiouss <aybiouss@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/20 13:32:08 by aybiouss          #+#    #+#             */
-/*   Updated: 2023/10/22 19:15:15 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/23 18:08:31 by aybiouss         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ class Client
         Configuration   _client_server;
         std::map<std::string, std::string> _mapEnv;
     public :
-        // size_t      _content
+        std::vector<Configuration>  _duplicated_servers;
         std::map<int, std::string> _defaultErrorPages;
         std::string _CgiHeader;
         std::string _CgiFile;

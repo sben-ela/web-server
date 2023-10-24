@@ -3,15 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aybiouss <aybiouss@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/04 12:25:06 by aybiouss          #+#    #+#             */
-/*   Updated: 2023/10/22 20:28:02 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/23 18:16:27 by aybiouss         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "./Includes/Servers.hpp"
-#include "./Includes/Socket.hpp"
 //testing !!
 
 void sig_handler(int sig) {
@@ -34,6 +33,10 @@ int main(int argc, char *argv[])
         {
             std::cout << e << std::endl;
             return (1);
+        }
+        catch (std::exception& e)
+        {
+            std::cout << e.what() << std::endl;
         }
     }
     else 

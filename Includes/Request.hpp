@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Request.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aybiouss <aybiouss@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/04 17:07:10 by aybiouss          #+#    #+#             */
-/*   Updated: 2023/10/22 22:50:15 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/23 18:14:52 by aybiouss         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ class Request
         unsigned long         _total;
         bool                  _chunked;
     public:
+        std::string           _value;
         std::string           _name;
         std::string           _upload;
         Request();
@@ -72,7 +73,7 @@ class Request
         std::map<int, std::string> getStatusCode( void ) const;
         void                       CreateStatusCode( void );
         void                       processMultiPart(std::string content);
-        std::string                ft_temp( void ) const; // ! hadi makantx katakhed hta chi arg
+        std::string                extensions( void ) const;
         const std::map<std::string, std::string>& getHeaders( void ) const;
         ~Request();
 };

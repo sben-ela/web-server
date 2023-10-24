@@ -3,19 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   Webserv.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sben-ela <sben-ela@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aybiouss <aybiouss@student.1337.ma>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/09/26 16:22:49 by sben-ela          #+#    #+#             */
-/*   Updated: 2023/10/22 19:02:41 by sben-ela         ###   ########.fr       */
+/*   Updated: 2023/10/23 18:13:02 by aybiouss         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-
 
 #pragma once
 
 #define PORT 7070 // Where the clients can reach at
-#define MAX_CLIENTS 10 // Maximum number of clients to handle
+#define MAX_CLIENTS 100 // Maximum number of clients to handle
 #include <csignal>
 #include <vector>
 #include <stdio.h>
